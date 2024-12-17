@@ -1,0 +1,19 @@
+{
+  "name": "alphavantage-crawler",
+  "version": "0.0.1",
+  "description": "alphavantage data crawling tools",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "keywords": [
+    "js",
+    "crawling"
+  ],
+  "author": "Xen-alpha",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2"
+  }
+}
