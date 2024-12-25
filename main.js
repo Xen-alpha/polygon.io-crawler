@@ -1,6 +1,14 @@
 const fs = require("node:fs");
+const cors = require("cors");
 const express = require("express");
 const app = express({ strict: true });
+
+app.use(
+  cors({
+    origin: "*",
+    credentials: false,
+  })
+);
 
 app.get("/", (req, res) => {
   res.status(404).send({ isSuccess: false, reason: "Not a valid URI path" });

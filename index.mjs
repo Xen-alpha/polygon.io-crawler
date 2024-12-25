@@ -57,6 +57,3 @@ class App {
     );
   }
 }
-
-const app = new App();
-await app.run();
