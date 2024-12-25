@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const cors = require("cors");
 const express = require("express");
 const app = express({ strict: true });
+const port = 8080;
 
 app.use(
   cors({
@@ -35,6 +36,14 @@ app.get("/stocklist", (req, res) => {
   }
 });
 
-app.listen(8080, () => {
-  console.log("server opened");
+app.get("/stockinfotest", (req, res) => {
+  try {
+    res.sendFile(`C:/Users/Playdata/Documents/JSCode/Alphavantage/result/IBM.json`);
+  } catch {
+    res.status(404).send("test failed");
+  }
+});
+
+app.listen(port, () => {
+  console.log(`server opened in ${port}`);
 });
