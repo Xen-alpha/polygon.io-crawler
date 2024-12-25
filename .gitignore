@@ -3,3 +3,4 @@ node_modules/*
 result/*
 .git
 package-lock.json
+script.code-workspace
