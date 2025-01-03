@@ -24,35 +24,26 @@ class App {
     return `${date.getFullYear()}${date.getMonth() < 9 ? "0" : ""}${date.getMonth() + 1}${date.getDate() < 9 ? "0" : ""}${date.getDate()}`;
   }
   async fetchMetadata(target) {
+    let result = await fetch(`https://api.nasdaq.com/api/screener/stocks?tableonly=true&offset=0&exchange=${target}&download=true`);
+    result = await result.json();
     if (!existsSync(`result/metadata/${target}_${this.#date}.json`)) {
-      fetch(`https://api.nasdaq.com/api/screener/stocks?tableonly=true&offset=0&exchange=${target}&download=true`)
-        .then((result) => result.json())
-        .then((result) => {
-          writeFileSync(`result/metadata/${target}_${this.#date}.json`, JSON.stringify(result, null, 1), {
-            encoding: "utf8",
-            flag: "w+",
-          });
-        })
-        .catch((e) => {
-          console.log(e);
-        });
+      writeFileSync(`result/metadata/${target}_${this.#date}.json`, JSON.stringify(result, null, 1), {
+        encoding: "utf8",
+        flag: "w+",
+      });
     }
+    return result.data.rows;
   }
   async fetchInfo(url) {
-    fetch(url)
-      .then((result) => result.json())
-      .then((result) => {
-        if (!existsSync(`result/${result["Meta Data"]["2. Symbol"]}_${this.#date}.json`)) {
-          writeFileSync(`result/${result["Meta Data"]["2. Symbol"]}_${this.#date}.json`, JSON.stringify(result, null, 1), {
-            encoding: "utf8",
-            flag: "w+",
-          });
-        }
-        return result.data.row;
-      })
-      .catch((e) => {
-        console.log(e);
+    if (!existsSync(`result/${result["Meta Data"]["2. Symbol"]}_${this.#date}.json`)) {
+      let result = await fetch(url);
+      result = await result.json();
+      writeFileSync(`result/${result["Meta Data"]["2. Symbol"]}_${this.#date}.json`, JSON.stringify(result, null, 1), {
+        encoding: "utf8",
+        flag: "w+",
       });
+      return result["Time Series (Daily)"];
+    }
   }
   async run() {
     // DB 스키마 생성하고 모델화
@@ -70,8 +61,8 @@ class App {
     console.log("Fetched metadata and today's data");
     // nasdaq, nyse, amex를 융합한 배열열 제작
     let totalStocks = [];
-    totalStocks.concat(nasdaqlist,nyselist,amexlist);
-
+    totalStocks = totalStocks.concat(nasdaqlist, nyselist, amexlist);
+    console.log(totalStocks[0]);
     // 위 오브젝트의 entries에 대해해 루프 돌면서 다음을 수행
       // 1. MongoDB에 질의하여 주어진 티커 코드를 키로 가진 필드가 존재하는지 질의
       // 2. 필드가 이미 있으면 나스닥에서 가져온온 오늘의 날짜 데이터를를 업데이트함.
@@ -81,8 +72,11 @@ class App {
       // 4-3. 질의에 실패한 경우 limitCounter를 API_LIMIT로 설정하기
       // 5. 루프를 계속 수행행
     console.log("Start writing...");
+    for (const item of totalStocks) {
+      const instance = new StockPrice({name: item.name, code: item.symbol, price: item.lastsale, date: this.#date });
+    }
+      
     /*
-    const instance = new StockPrice({name: , code:, price:, date: });
     try{
       await instance.save();
       console.log(instance);
