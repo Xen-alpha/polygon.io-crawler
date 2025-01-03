@@ -47,7 +47,7 @@ class App {
   }
   async run() {
     // DB 스키마 생성하고 모델화
-    const schema = mongoose.Schema({name: String, code: {type: String, required:true} , price: {type: String, required:true}, date: {type: Date, required:true}}, {collection:"stock"});
+    const schema = mongoose.Schema({name: String, code: {type: String, required:true} , price: {type: String, required:true}, date: {type: String, required:true}}, {collection:"stock"});
     const stockPrice = mongoose.model("StockPrice", schema);
 
     // API URL에 파라미터로 넣을 키 가져오기기
@@ -75,7 +75,7 @@ class App {
       const instance = new stockPrice({name: item.name, code: item.symbol, price: item.lastsale.substr(1), date: this.#date });
       try {
         await instance.save();
-        console.log(instance);
+        // console.log(instance);
       } catch (e) {
           console.error(e);
       }
