@@ -69,9 +69,14 @@ class App {
       // 4-1. 쿼리 결과가 1095개보다 적을 때 limitCounter가 API_LIMIT보다 작을 때 알파밴티지에 일자별 가격 기록을 질의
       // 4-2. 4-1번에 따라 가격 기록을 질의했다면 컬렉션에 필드로 기록하고 limitCounter를 +1
       // 4-3. 질의에 실패한 경우 limitCounter를 API_LIMIT로 설정하기
-      // 5. 루프를 계속 수행행
+      // 5. 루프를 계속 수행
     console.log("Start writing...");
     for (const item of totalStocks) {
+      const query_check = await stockPrice.find({code: item.symbol, date:this.#date});
+      if (query_check.length > 0) {
+        console.log(item.symbol +" already crawled!")
+        continue;
+      }
       const instance = new stockPrice({name: item.name, code: item.symbol, price: item.lastsale.substr(1), date: this.#date });
       try {
         await instance.save();
