@@ -21,7 +21,7 @@ class App {
   }
   #getDateFormat(date) {
     // Note: 메서드 명칭들이 직관적이지 않다는 점에 주의(웹 검색 필요)
-    return `${date.getFullYear()}${date.getMonth() < 9 ? "0" : ""}${date.getMonth() + 1}${date.getDate() < 9 ? "0" : ""}${date.getDate()}`;
+    return `${date.getFullYear()}-${date.getMonth() < 9 ? "0" : ""}${date.getMonth() + 1}-${date.getDate() < 9 ? "0" : ""}${date.getDate()}`;
   }
   async fetchMetadata(target) {
     let result = await fetch(`https://api.nasdaq.com/api/screener/stocks?tableonly=true&offset=0&exchange=${target}&download=true`);
@@ -47,12 +47,12 @@ class App {
   }
   async run() {
     // DB 스키마 생성하고 모델화
-    const schema = mongoose.Schema({name: String, code: {type: String, required:true} , price: {type: Number, required:true}, date: {type: Date, required:true}}, {collection:"stock"});
-    const StockPrice = mongoose.model("StockPrice", schema);
+    const schema = mongoose.Schema({name: String, code: {type: String, required:true} , price: {type: String, required:true}, date: {type: Date, required:true}}, {collection:"stock"});
+    const stockPrice = mongoose.model("StockPrice", schema);
 
     // API URL에 파라미터로 넣을 키 가져오기기
-    const APIKey = readFileSync("../APIKey.json").toJSON().key; // key 가져옴
-    const limitCounter = 0; // API_LIMIT까지 increase
+    const apiKey = readFileSync("../APIKey.json").toJSON().key; // key 가져옴
+    let limitCounter = 0; // API_LIMIT까지 increase
 
     // 메타데이터 배열 가져오기(오늘의 주식 가격들을 포함)
     const nasdaqlist = await this.fetchMetadata(TARGETLIST.nasdaq);
@@ -62,7 +62,6 @@ class App {
     // nasdaq, nyse, amex를 융합한 배열열 제작
     let totalStocks = [];
     totalStocks = totalStocks.concat(nasdaqlist, nyselist, amexlist);
-    console.log(totalStocks[0]);
     // 위 오브젝트의 entries에 대해해 루프 돌면서 다음을 수행
       // 1. MongoDB에 질의하여 주어진 티커 코드를 키로 가진 필드가 존재하는지 질의
       // 2. 필드가 이미 있으면 나스닥에서 가져온온 오늘의 날짜 데이터를를 업데이트함.
@@ -73,22 +72,27 @@ class App {
       // 5. 루프를 계속 수행행
     console.log("Start writing...");
     for (const item of totalStocks) {
-      const instance = new StockPrice({name: item.name, code: item.symbol, price: item.lastsale, date: this.#date });
+      const instance = new stockPrice({name: item.name, code: item.symbol, price: item.lastsale.substr(1), date: this.#date });
+      try {
+        await instance.save();
+        console.log(instance);
+      } catch (e) {
+          console.error(e);
+      }
+      const query = await stockPrice.find({code: item.symbol});
+      if (query.length < 1095 && limitCounter < API_LIMIT) { // 3년치가 안 되는 데이터 발견 시 알파밴티지에 요청
+        /*
+          const historyResult = await this.fetchInfo(
+            `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${item.symbol}&outputsize=full&apikey=${apiKey}`
+          );
+          for (const [key, value] of Object.entries(historyResult["Time Series (Daily)"])) {
+            const historyInstance = new stockPrice({name: item.name, code: item.symbol, price: value["4. close"], date: key});
+          }
+        */
+        limitCounter = limitCounter + 1;
+      }
     }
-      
-    /*
-    try{
-      await instance.save();
-      console.log(instance);
-    } catch (e) {
-       console.error(e);
-    }
-    */
-    /*
-    await this.fetchInfo(
-      "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=IBM&outputsize=full&apikey=demo"
-    );
-    */
+
     mongoose.disconnect();
   }
 }
