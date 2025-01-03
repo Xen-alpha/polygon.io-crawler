@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import mongoose from "mongoose";
+import { mongoose } from "mongoose";
 
 const TARGETLIST = {
   nasdaq: "nasdaq",
@@ -89,6 +89,7 @@ class App {
       "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=IBM&outputsize=full&apikey=demo"
     );
     */
+    mongoose.disconnect();
   }
 }
 
