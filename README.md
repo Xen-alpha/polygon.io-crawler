@@ -11,10 +11,11 @@
 
 
 ## 사용 방법
+* MongoDB를 설치하고, 기본 포트(27017)로 연 다음, americastock 데이터베이스와 stock 컬렉션을 만듭니다.
 * 리포지토리를 클론한 폴더의 상위 디렉토리에 APIKey.json 파일을 작성합니다.
 ```json
   {
-    "1": "APIKEYDEMO"
+    "key": "APIKEYDEMO"
   }
 ```
 * result 폴더 안에 metadata 폴더를 만들어야 합니다.
