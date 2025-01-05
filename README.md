@@ -12,7 +12,7 @@
 
 ## 사용 방법
 * MongoDB를 설치하고, 기본 포트(27017)로 연 다음, americastock 데이터베이스와 stock 컬렉션을 만듭니다.
-* 리포지토리를 클론한 폴더의 상위 디렉토리에 APIKey.json 파일을 작성합니다.
+* 리포지토리를 클론한 폴더의 상위 디렉토리에 다음과 같은 형태의 APIKey.json 파일을 작성합니다.
 ```json
   {
     "key": "APIKEYDEMO"
@@ -20,6 +20,9 @@
 ```
 * result 폴더 안에 metadata 폴더를 만들어야 합니다.
 * 다음 명령어들을 필요에 따라 적절하게 실행합니다.
-  * `npm run build` : 크롤링을 시작합니다.
+  * `npm run build` : 오늘의 NASDAQ 가격 크롤링을 시작합니다.
     * 리눅스 환경에서 cron을 사용해 주기적으로 `node index.mjs`를 실행하는 것을 권장합니다.
   * `npm run start` : 크롤링한 데이터를 전달할 API 서버를 시작합니다.
+  * `npm run crawl` : 알파밴티지 주가 변동 기록 크롤링을 시작합니다.
+    * 기본적으로 1개만 크롤링하게 되어 있습니다.
+    * 역시 리눅스 환경에서 cron을 사용해 주기적으로 `node crawler.mjs`를 실행하는 것을 권장합니다.

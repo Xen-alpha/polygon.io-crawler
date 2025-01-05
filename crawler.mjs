@@ -61,7 +61,8 @@ class Crawler {
     for (const item of totalStocks) {
       const query = await stockPrice.find({code: item.symbol});
       console.log(query);
-      if (query.length < 1095 && limitCounter < API_LIMIT) { // 3년치가 안 되는 데이터 발견 시 알파밴티지에 요청
+      if (limitCounter >= API_LIMIT) break;
+      else if (query.length < 1095 && limitCounter < API_LIMIT) { // 3년치가 안 되는 데이터 발견 시 알파밴티지에 요청
         try {
           const historyResult = await this.fetchInfo(
             `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${item.symbol}&outputsize=full&apikey=${apiKey}`
@@ -74,12 +75,11 @@ class Crawler {
             console.log(JSON.stringify(historyInstance,null,1));
             await historyInstance.save();
           }
-          limitCounter = limitCounter + 1;
         } catch (e) {
           console.error(e);
         }
+        limitCounter = limitCounter + 1; // API 요청 제약에 걸리는 크롤링 요청이 가장 먼저 시작되므로 성공하든 실패하든 limitCounter를 늘려야 함
       }
-      else if (limitCounter >= API_LIMIT) break;
     }
 
     mongoose.disconnect();
