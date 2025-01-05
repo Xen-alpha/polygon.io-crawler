@@ -1,5 +1,7 @@
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { mongoose } from "mongoose";
+
+const API_LIMIT = 1;
 
 const TARGETLIST = {
   nasdaq: "nasdaq",
@@ -7,7 +9,7 @@ const TARGETLIST = {
   amex: "amex",
 };
 
-class App {
+class Crawler {
   #date;
   constructor() {
     this.#date = this.#getDateFormat(new Date(Date.now()));
@@ -24,13 +26,12 @@ class App {
   async fetchMetadata(target) {
     let result = await fetch(`https://api.nasdaq.com/api/screener/stocks?tableonly=true&offset=0&exchange=${target}&download=true`);
     result = await result.json();
-    if (!existsSync(`result/metadata/${target}_${this.#date}.json`)) {
-      writeFileSync(`result/metadata/${target}_${this.#date}.json`, JSON.stringify(result, null, 1), {
-        encoding: "utf8",
-        flag: "w+",
-      });
-    }
     return result.data.rows;
+  }
+  async fetchInfo(url) {
+    let result = await fetch(url);
+    result = await result.json();
+    return result["Time Series (Daily)"];
   }
   async run() {
     // DB 스키마 생성하고 모델화
@@ -38,7 +39,8 @@ class App {
     const stockPrice = mongoose.model("StockPrice", schema);
 
     // API URL에 파라미터로 넣을 키 가져오기기
-    const apiKey = readFileSync("../APIKey.json").toJSON().key; // key 가져옴
+    const apiKey = JSON.parse(readFileSync("../APIKey.json").toString()).key; // key 가져옴
+    console.log(apiKey);
     let limitCounter = 0; // API_LIMIT까지 increase
 
     // 메타데이터 배열 가져오기(오늘의 주식 가격들을 포함)
@@ -50,28 +52,39 @@ class App {
     let totalStocks = [];
     totalStocks = totalStocks.concat(nasdaqlist, nyselist, amexlist);
     // 위 오브젝트의 entries에 대해해 루프 돌면서 다음을 수행
-      // 1. MongoDB에 질의하여 주어진 티커 코드를 키로 가진 필드가 존재하는지 질의
-      // 2. 필드가 이미 있으면 나스닥에서 가져온온 오늘의 날짜 데이터를 업데이트함.
-      // 3. 루프를 계속 수행
-    console.log("Start writing...");
+    // 1. 쿼리 결과가 1095개(3년치 기록)보다 많은지 확인
+    // 2-1. 쿼리 결과가 1095개보다 적을 때 limitCounter가 API_LIMIT보다 작을 때 알파밴티지에 일자별 가격 기록을 질의
+    // 2-2. 4-1번에 따라 가격 기록을 질의했다면 컬렉션에 필드로 기록하고 limitCounter를 +1
+    // 2-3. 질의에 실패한 경우 limitCounter를 API_LIMIT로 설정하기
+    // 3. 루프를 계속 수행
+    console.log("Start writing histories...");
     for (const item of totalStocks) {
-      const query_check = await stockPrice.find({code: item.symbol, date:this.#date});
-      if (query_check.length > 0) {
-        console.log(item.symbol +" already crawled!")
-        continue;
-      }
-      const instance = new stockPrice({name: item.name, code: item.symbol, price: item.lastsale.substr(1), date: this.#date });
-      try {
-        await instance.save();
-        // console.log(instance);
-      } catch (e) {
+      const query = await stockPrice.find({code: item.symbol});
+      console.log(query);
+      if (query.length < 1095 && limitCounter < API_LIMIT) { // 3년치가 안 되는 데이터 발견 시 알파밴티지에 요청
+        try {
+          const historyResult = await this.fetchInfo(
+            `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${item.symbol}&outputsize=full&apikey=${apiKey}`
+          );
+          console.log(historyResult);
+          if (historyResult.Information) throw new Error("API Limit reached!");
+          for (const [key, value] of Object.entries(historyResult)) {
+            if (key < "2022-01-02") break;
+            const historyInstance = new stockPrice({name: item.name, code: item.symbol, price: value["4. close"], date: key});
+            console.log(JSON.stringify(historyInstance,null,1));
+            await historyInstance.save();
+          }
+          limitCounter = limitCounter + 1;
+        } catch (e) {
           console.error(e);
+        }
       }
+      else if (limitCounter >= API_LIMIT) break;
     }
 
     mongoose.disconnect();
   }
 }
 
-const app = new App();
+const app = new Crawler();
 await app.run();
