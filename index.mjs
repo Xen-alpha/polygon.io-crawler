@@ -11,13 +11,9 @@ class App {
   #date;
   constructor() {
     this.#date = this.#getDateFormat(new Date(Date.now()));
-    mongoose.connect("mongodb://127.0.0.1:27017/americastock").then((result) => {
-      console.log("MongoDB 연결 성공!")
-    }).catch((e) => {
-      throw new Error("MongoDB 연결 실패, 앱을 종료합니다!");
-    })
   }
   #getDateFormat(date) {
+    date.setUTCDate(date.getUTCDate() - 1); // 지구 반대편의 데이터라 시간대 고려하면 하루 정도 어긋나야 함
     // Note: 메서드 명칭들이 직관적이지 않다는 점에 주의(웹 검색 필요)
     return `${date.getFullYear()}-${date.getMonth() < 9 ? "0" : ""}${date.getMonth() + 1}-${date.getDate() < 9 ? "0" : ""}${date.getDate()}`;
   }
@@ -33,13 +29,16 @@ class App {
     return result.data.rows;
   }
   async run() {
+    try {
+      const dbresponse = await mongoose.connect("mongodb://127.0.0.1:27017/americastock")
+      console.log("MongoDB 연결 성공!");
+    } catch (e) {
+      throw new Error("MongoDB 연결 실패, 앱을 종료합니다!");
+    }
+
     // DB 스키마 생성하고 모델화
     const schema = mongoose.Schema({name: String, code: {type: String, required:true} , price: {type: String, required:true}, date: {type: String, required:true}}, {collection:"stock"});
     const stockPrice = mongoose.model("StockPrice", schema);
-
-    // API URL에 파라미터로 넣을 키 가져오기기
-    const apiKey = readFileSync("../APIKey.json").toJSON().key; // key 가져옴
-    let limitCounter = 0; // API_LIMIT까지 increase
 
     // 메타데이터 배열 가져오기(오늘의 주식 가격들을 포함)
     const nasdaqlist = await this.fetchMetadata(TARGETLIST.nasdaq);
