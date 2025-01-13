@@ -57,9 +57,13 @@ app.get("/stock", async (req,res) => {
   
 });
 
-app.get("/stockinfotest", (req, res) => {
+app.get("/stockinfotest", async (req, res) => {
   try {
-    res.sendFile(`C:/Users/Playdata/Documents/JSCode/Alphavantage/result/IBM.json`);
+    const historyResult = await this.fetchInfo(
+      `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=IBM&outputsize=full&apikey=demo`
+    );
+    fs.writeFileSync('./result/IBM.json', JSON.stringify(historyResult));
+    res.sendFile('./result/IBM.json');
   } catch {
     res.status(404).send("test failed");
   }
