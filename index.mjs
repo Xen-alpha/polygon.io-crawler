@@ -20,8 +20,8 @@ class App {
   async fetchMetadata(target) {
     let result = await fetch(`https://api.nasdaq.com/api/screener/stocks?tableonly=true&offset=0&exchange=${target}&download=true`);
     result = await result.json();
-    if (!existsSync(`result/metadata/${target}_${this.#date}.json`)) {
-      writeFileSync(`result/metadata/${target}_${this.#date}.json`, JSON.stringify(result, null, 1), {
+    if (!existsSync(`${import.meta.dirname}/result/metadata/${target}_${this.#date}.json`)) {
+      writeFileSync(`${import.meta.dirname}/result/metadata/${target}_${this.#date}.json`, JSON.stringify(result, null, 1), {
         encoding: "utf8",
         flag: "w+",
       });

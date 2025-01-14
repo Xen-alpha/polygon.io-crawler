@@ -63,7 +63,7 @@ class Crawler {
     for (const item of totalStocks) {
       const query = await stockPrice.find({code: item.symbol});
       if (limitCounter >= API_LIMIT) break;
-      else if (query.length < 1095 && limitCounter < API_LIMIT) { // 3년치가 안 되는 데이터 발견 시 알파밴티지에 요청
+      else if (query.filter((value) => value.date >= "2022-01-02").length < 950 && limitCounter < API_LIMIT) { // 3년치가 안 되는 데이터 발견 시 알파밴티지에 요청
         try {
           const historyResult = await this.fetchInfo(
             `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${item.symbol}&outputsize=full&apikey=${apiKey}`
