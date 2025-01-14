@@ -21,36 +21,65 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
-  res.status(404).send({ isSuccess: false, reason: "Not a valid URI path" });
+  res.status(404).send({ success: false, reason: "Not a valid URI path" });
 });
 
-app.get("/stocklist", (req, res) => {
+app.get("/stocklist", async (req, res) => {
   const reqBody = req.body;
-  if (!reqBody || !reqBody.code || !reqBody.code == "") {
-    res.status(400).send({ isSuccess: false, reason: "Body value not given", requestBody: req.body });
+  if (!reqBody || !reqBody.code || !reqBody.code === "") {
+    res.status(400).send({ success: false, reason: "Body value not given", requestBody: req.body });
     return;
   }
   try {
-    const metadata = fs.readdirSync(`result/metadata`).sort().reverse();
-    const nasdaq = metadata.filter((value) => value.substring(0, 5) === "nasdaq");
-    const nyse = metadata.filter((value) => value.substring(0, 3) === "nyse");
-    const amex = metadata.filter((value) => value.substring(0, 3) === "amex");
-    const nasdaqArray = JSON.parse(fs.readFileSync(nasdaq[0], { encoding: "utf-8" })).data.rows.map((value) => value.symbol); // read-only
-    const nyseArray = JSON.parse(fs.readFileSync(nyse[0], { encoding: "utf-8" })).data.rows.map((value) => value.symbol); // read-only
-    const amexArray = JSON.parse(fs.readFileSync(amex[0], { encoding: "utf-8" })).data.rows.map((value) => value.symbol); // read-only
-    res.send({ isSuccess: true, result: nasdaqArray.concat(nyseArray, amexArray).sort() });
+    const query = await stockPrice.find({code: reqBody.code}).sort({date:'desc'});
+    res.send({ success: true, result: query });
   } catch (e) {
-    res.status(503).send({ isSuccess: false, reason: "Failed to read server-side data", requestBody: req.body });
+    res.status(503).send({ success: false, reason: "Failed to read server-side data", requestBody: req.body });
     return;
   }
 });
 
-app.get("/stock", async (req,res) => {
+app.get("/stock", async (req, res) => {
+  const reqBody = req.body;
+  if (!reqBody || !reqBody.code || !reqBody.code === "") {
+    res.status(400).send({ success: false, reason: "Body value not given", requestBody: req.body });
+    return;
+  }
   try {
-    const ticker = req.body.code;
+    const query = await stockPrice.find({code: reqBody.code}).sort({date:'desc'}).limit(1);
+    res.send({ success: true, result: query });
+  } catch (e) {
+    res.status(503).send({ success: false, reason: "Failed to read server-side data", requestBody: req.body });
+    return;
+  }
+});
 
-    const query = await stockPrice.find({code: ticker});
-    res.send({isSuccess: true, code: ticker, result: query});
+app.get("/pricehistory", async (req,res) => {
+  try {
+    const reqBody = req.body;
+    if (!reqBody || !reqBody.code || !reqBody.code === "") {
+      res.status(400).send({ success: false, reason: "Body value not given", requestBody: req.body });
+      return;
+    }
+    const query = await stockPrice.find({code: reqBody.code});
+    res.send({success: true, code: reqBody.code, result: query});
+  } catch (e) {
+    res.status(400).send("Bad Request: " + e);
+  }
+  
+});
+
+app.get("/lastprice", async (req,res) => {
+  try {
+    const reqBody = req.body;
+    console.log(reqBody);
+    if (!reqBody || !reqBody.code || !reqBody.code === "") {
+      res.status(400).send({ success: false, reason: "Body value not given", requestBody: req.body });
+      return;
+    }
+    const query = await stockPrice.find({code: reqBody.code});
+    if (query.length > 0) res.send({success: true, code: reqBody.code, result: query[0]["price"]});
+    else res.send({ success: false, reason: "Wrong ticker code"})
   } catch (e) {
     res.status(400).send("Bad Request: " + e);
   }

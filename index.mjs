@@ -26,6 +26,10 @@ class App {
         flag: "w+",
       });
     }
+    result.data.rows = result.data.rows.map((value) => {
+      value.code = target;
+      return value;
+    });
     return result.data.rows;
   }
   async run() {
@@ -37,7 +41,7 @@ class App {
     }
 
     // DB 스키마 생성하고 모델화
-    const schema = mongoose.Schema({name: String, code: {type: String, required:true} , price: {type: String, required:true}, date: {type: String, required:true}}, {collection:"stock"});
+    const schema = mongoose.Schema({id: Number, name: String, code: {type: String, required:true} , price: {type: String, required:true}, date: {type: String, required:true}}, {collection:"stock"});
     const stockPrice = mongoose.model("StockPrice", schema);
 
     // 메타데이터 배열 가져오기(오늘의 주식 가격들을 포함)
@@ -53,13 +57,17 @@ class App {
       // 2. 필드가 이미 있으면 나스닥에서 가져온온 오늘의 날짜 데이터를 업데이트함.
       // 3. 루프를 계속 수행
     console.log("Start writing...");
+    let counter = 0;
     for (const item of totalStocks) {
-      const query_check = await stockPrice.find({code: item.symbol, date:this.#date});
+      counter = counter + 1;
+      let date = new Date(Date.now());
+      date.setDate(date.getDate()-1);
+      const query_check = await stockPrice.find({code: item.symbol, date:this.#getDateFormat(date)});
       if (query_check.length > 0) {
         console.log(item.symbol +" already crawled!")
         continue;
       }
-      const instance = new stockPrice({name: item.name, code: item.symbol, price: item.lastsale.substr(1), date: this.#date });
+      const instance = new stockPrice({id: counter, name: item.name, code: item.symbol, price: item.lastsale.substr(1), date: date });
       try {
         await instance.save();
         // console.log(instance);
