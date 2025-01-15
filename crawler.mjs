@@ -38,7 +38,7 @@ class Crawler {
     }
 
     // DB 스키마 생성하고 모델화
-    const schema = mongoose.Schema({name: String, code: {type: String, required:true} , price: {type: String, required:true}, date: {type: String, required:true}}, {collection:"stock"});
+    const schema = mongoose.Schema({id: Number, name: String, code: {type: String, required:true} , market: {type: String, required : true}, price: {type: String, required:true}, date: {type: String, required:true}}, {collection:"stock"});
     const stockPrice = mongoose.model("StockPrice", schema);
 
     // API URL에 파라미터로 넣을 키 가져오기기
@@ -68,13 +68,15 @@ class Crawler {
           const historyResult = await this.fetchInfo(
             `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${item.symbol}&outputsize=full&apikey=${apiKey}`
           );
+          let metadataresponse = await fetch(`https://www.alphavantage.co/query?function=OVERVIEW&symbol=${item.symbol}&apikey=${apiKey}`);
+          let metadataresult = await metadataresponse.json();
           console.log("crawling "+ item.symbol +"...");
           if (historyResult.Information) throw new Error("API Limit reached!");
           for (const [key, value] of Object.entries(historyResult)) { // 최근 날짜부터 사전에 내림차순 정렬됨
             if (key < "2022-01-02") break; // 2022년 이전 데이터는 무시
             const isThisExists = await stockPrice.find({code: item.symbol, price: value["4. close"], date: key});
             if (isThisExists.length > 0) continue;
-            const historyInstance = new stockPrice({name: item.name, code: item.symbol, price: value["4. close"], date: key});
+            const historyInstance = new stockPrice({id:query.id, name: item.name, code: item.symbol, market: metadataresult["Exchange"].toLowerCase(), price: value["4. close"], date: key});
             await historyInstance.save();
           }
         } catch (e) {
