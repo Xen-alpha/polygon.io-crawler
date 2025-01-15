@@ -21,7 +21,7 @@ const getDateFormat = (date) => {
 app.use(
   cors({
     origin: "*",
-    credentials: false,
+    credentials: true,
   })
 );
 app.use(express.json());
@@ -80,8 +80,8 @@ app.get("/pricehistory", async (req,res) => {
 
 app.get("/lastprice", async (req,res) => {
   try {
-    const reqBody = req.body;
-    console.log(reqBody);
+    const reqBody = req.params;
+    console.log(JSON.stringify(reqBody));
     if (!reqBody || !reqBody.code || !reqBody.code === "") {
       res.status(400).send({ success: false, reason: "Body value not given", requestBody: req.body });
       return;
