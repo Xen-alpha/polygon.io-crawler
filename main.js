@@ -32,14 +32,14 @@ app.get("/", (req, res) => {
 });
 
 app.get("/stocklist", async (req, res) => {
-
-  const reqBody = req.body;
-  if (!reqBody || !reqBody.code || !reqBody.code === "") {
+  const reqBody = req.param("code");
+    console.log(reqBody);
+    if (!reqBody || !reqBody === "") {
     res.status(400).send({ success: false, reason: "Body value not given", requestBody: req.body });
     return;
   }
   try {
-    const query = await stockPrice.find({code: reqBody.code}).sort({date:'desc'});
+    const query = await stockPrice.find({code: reqBody}).sort({date:'desc'});
     res.send({ success: true, result: query });
 
   } catch (e) {
@@ -49,13 +49,14 @@ app.get("/stocklist", async (req, res) => {
 });
 
 app.get("/stock", async (req, res) => {
-  const reqBody = req.body;
-  if (!reqBody || !reqBody.code || !reqBody.code === "") {
+  const reqBody = req.param("code");
+  console.log(reqBody);
+  if (!reqBody || !reqBody === "") {
     res.status(400).send({ success: false, reason: "Body value not given", requestBody: req.body });
     return;
   }
   try {
-    const query = await stockPrice.find({code: reqBody.code}).sort({date:'desc'}).limit(1);
+    const query = await stockPrice.find({code: reqBody}).sort({date:'desc'}).limit(1);
     res.send({ success: true, result: query });
   } catch (e) {
     res.status(503).send({ success: false, reason: "Failed to read server-side data", requestBody: req.body });
@@ -65,13 +66,13 @@ app.get("/stock", async (req, res) => {
 
 app.get("/pricehistory", async (req,res) => {
   try {
-    const reqBody = req.body;
-    if (!reqBody || !reqBody.code || !reqBody.code === "") {
+    const reqBody = req.param("code");
+    if (!reqBody || !reqBody === "") {
       res.status(400).send({ success: false, reason: "Body value not given", requestBody: req.body });
       return;
     }
-    const query = await stockPrice.find({code: reqBody.code});
-    res.send({success: true, code: reqBody.code, result: query});
+    const query = await stockPrice.find({code: reqBody});
+    res.send({success: true, code: reqBody, result: query});
   } catch (e) {
     res.status(400).send("Bad Request: " + e);
   }
@@ -80,16 +81,15 @@ app.get("/pricehistory", async (req,res) => {
 
 app.get("/lastprice", async (req,res) => {
   try {
-    const reqBody = req.params;
-    console.log(JSON.stringify(reqBody));
-    if (!reqBody || !reqBody.code || !reqBody.code === "") {
+    const reqBody = req.param("code");
+    console.log(reqBody);
+    if (!reqBody || !reqBody === "") {
       res.status(400).send({ success: false, reason: "Body value not given", requestBody: req.body });
       return;
     }
-    const query = await stockPrice.find({code: reqBody.code});
-    if (query.length > 0) res.send({success: true, code: reqBody.code, result: query[0]["price"]});
-    else res.send({ success: false, reason: "Wrong ticker code"})
-
+    const query = await stockPrice.find({code: reqBody});
+    if (query.length > 0) res.send({success: true, code: reqBody, result: query[0]["price"]});
+    else res.send({success: false, reason: "Wrong Ticker code"});
   } catch (e) {
     res.status(400).send("Bad Request: " + e);
   }
