@@ -4,9 +4,8 @@
   "description": "alphavantage data crawling tools",
   "main": "index.js",
   "scripts": {
-    "build": "node index.mjs",
     "start": "nodemon main.js",
-	"crawl": "node crawler.mjs"
+	  "crawl": "node crawler.mjs"
   },
   "keywords": [
     "js",
