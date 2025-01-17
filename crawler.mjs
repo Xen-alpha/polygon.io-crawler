@@ -46,8 +46,12 @@ const callback = async (totalStocks, stockPrice, key) => {
 class App {
     
   async run() {
+    let apiKey = ""
     try {
-      const dbresponse = await mongoose.connect("mongodb://127.0.0.1:27017/americastock");
+      const configfile = JSON.parse(readFileSync("../APIKey.json", {encoding: 'utf-8'}).toString());
+      apiKey = configfile.key;
+      const dbAddress = configfile.address;
+      const dbresponse = await mongoose.connect(dbAddress);
       console.log("MongoDB 연결 성공!");
     } catch (e) {
       throw new Error("MongoDB 연결 실패, 앱을 종료합니다!");
@@ -65,8 +69,6 @@ class App {
     // nasdaq, nyse, amex를 융합한 배열열 제작
     let totalStocks = [];
     totalStocks = totalStocks.concat(nasdaqlist, nyselist, amexlist);
-
-    const apiKey = JSON.parse(readFileSync("../APIKey.json", {encoding: 'utf-8'}).toString()).key;
     // 위 오브젝트의 entries에 대해해 루프 돌면서 다음을 수행
       // 1. MongoDB에 질의하여 주어진 티커 코드를 키로 가진 필드가 존재하는지 질의
       // 2. 필드가 이미 있으면 나스닥에서 가져온온 오늘의 날짜 데이터를 업데이트함.
