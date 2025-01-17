@@ -15,7 +15,6 @@ const callback = async (totalStocks, stockPrice, key) => {
   console.log(`Fetching ${totalStocks[counter].code} Data...`);
   let olddate = new Date(Date.now());
   olddate.setMonth(olddate.getMonth() - 12);
-  console.log(getDateFormat(olddate));
   // 최근 1년 데이터 받아옴
   let response = await fetch(`https://api.polygon.io/v2/aggs/ticker/${totalStocks[counter].code}/range/1/day/${getDateFormat(olddate)}/${getDateFormat(new Date(Date.now()))}?adjusted=true&sort=desc&apiKey=${key}`);
   response = await response.json();
@@ -51,6 +50,7 @@ class App {
       const configfile = JSON.parse(readFileSync("../APIKey.json", {encoding: 'utf-8'}).toString());
       apiKey = configfile.key;
       const dbAddress = configfile.address;
+      console.log(dbAddress);
       const dbresponse = await mongoose.connect(dbAddress);
       console.log("MongoDB 연결 성공!");
     } catch (e) {
