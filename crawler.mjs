@@ -25,8 +25,11 @@ const callback = async (totalStocks, stockPrice, key) => {
     return newObject;
   });
   for (const item of timeSeries) {
-    const result = await stockPrice.findOne({ code: totalStocks[counter].symbol, date: item.timestamp});
-    if (result) continue;
+    const result = await stockPrice.findOne({ code: totalStocks[counter].code, date: item.timestamp});
+    if (result) {
+      console.log(`Date ${item.timestamp} already exists for ${totalStocks[counter].code}`);
+      break;
+    }
     const instance = new stockPrice({id: counter, name: totalStocks[counter].name, code: totalStocks[counter].code, market: totalStocks[counter].market, price: item.price, date: item.timestamp });
     try {
       await instance.save();
