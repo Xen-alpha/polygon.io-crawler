@@ -28,7 +28,7 @@ const callback = async (totalStocks, stockPrice, key) => {
     const result = await stockPrice.findOne({ code: totalStocks[counter].code, date: item.timestamp});
     if (result) {
       console.log(`Date ${item.timestamp} already exists for ${totalStocks[counter].code}`);
-      break;
+      continue;
     }
     const instance = new stockPrice({id: counter, name: totalStocks[counter].name, code: totalStocks[counter].code, market: totalStocks[counter].market, price: item.price, date: item.timestamp });
     try {
