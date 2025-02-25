@@ -14,7 +14,7 @@ let timerInstance;
 const callback = async (totalStocks, stockPrice, key) => {
   console.log(`Fetching ${totalStocks[counter].code} Data...`);
   let olddate = new Date(Date.now());
-  olddate.setMonth(olddate.getMonth() - 12);
+  olddate.setMonth(olddate.getMonth() - 23);
   // 최근 1년 데이터 받아옴
   let response = await fetch(`https://api.polygon.io/v2/aggs/ticker/${totalStocks[counter].code}/range/1/day/${getDateFormat(olddate)}/${getDateFormat(new Date(Date.now()))}?adjusted=true&sort=desc&apiKey=${key}`);
   response = await response.json();
