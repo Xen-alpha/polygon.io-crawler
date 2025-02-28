@@ -14,10 +14,14 @@ let timerInstance;
 const callback = async (totalStocks, stockPrice, key) => {
   console.log(`Fetching ${totalStocks[counter].code} Data...`);
   let olddate = new Date(Date.now());
-  let code = totalstocks[counter].code;
-  let market= totalstocks[counter].market;
-  let name = totalstocks[counter].name;
+  let code = totalStocks[counter].code;
+  let market= totalStocks[counter].market;
+  let name = totalStocks[counter].name;
   counter++;
+  if (counter >= totalStocks.length) {
+    clearInterval(timerInstance);
+    mongoose.disconnect();
+  }
   olddate.setMonth(olddate.getMonth() - 23);
   // 최근 1년 데이터 받아옴
   let response = await fetch(`https://api.polygon.io/v2/aggs/ticker/${code}/range/1/day/${getDateFormat(olddate)}/${getDateFormat(new Date(Date.now()))}?adjusted=true&sort=desc&apiKey=${key}`);
@@ -31,7 +35,7 @@ const callback = async (totalStocks, stockPrice, key) => {
   for (const item of timeSeries) {
     const result = await stockPrice.findOne({ code: code, date: item.timestamp});
     if (result) {
-      console.log(`Date ${item.timestamp} already exists for ${totalStocks[counter].code}`);
+      console.log(`Date ${item.timestamp} already exists for ${code}`);
       continue;
     }
     const instance = new stockPrice({id: counter, name: name, code: code, market: market, price: item.price, date: item.timestamp });
@@ -41,11 +45,7 @@ const callback = async (totalStocks, stockPrice, key) => {
         console.error(e);
     }
   }
-  console.log(`Fetched ${totalStocks[counter].code} Data...`);
-  if (counter >= totalStocks.length) {
-    mongoose.disconnect();
-    clearInterval(timerInstance);
-  }
+  console.log(`Fetched ${code} Data...`);
 }
 
 class App {
