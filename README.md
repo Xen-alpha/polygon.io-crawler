@@ -23,6 +23,6 @@
   * `npm run build` : 오늘의 NASDAQ 가격 크롤링을 시작합니다.
     * 리눅스 환경에서 cron을 사용해 주기적으로 `node index.mjs`를 실행하는 것을 권장합니다.
   * `npm run start` : 크롤링한 데이터를 전달할 API 서버를 시작합니다.
-  * `npm run crawl` : Polygon.io 주가 변동 기록 크롤링을 시작합니다.
+  * `npm run crawl` : forever를 사용해 Polygon.io 주가 변동 기록 크롤링을 시작합니다.
     * 기본적으로 15초에 한 종목만 크롤링하게 되어 있습니다.
-    * 역시 리눅스 환경에서 cron을 사용해 주기적으로 `node crawler.mjs`를 실행하는 것을 권장합니다.
+    * 이 명령어를 사용하지 않을 경우 리눅스 환경에서 cron을 사용해 일 단위의 주기로 `node crawler.mjs`를 실행하는 것을 권장합니다.

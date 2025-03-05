@@ -6,7 +6,7 @@
   "scripts": {
     "start": "nodemon main.js",
     "build": "node crawler.mjs",
-	  "crawl": "forever start crawler.mjs"
+	  "crawl": "forever start crawler.mjs --minUptime=3000000000 --spinSleepTime=3000000000"
   },
   "keywords": [
     "js",
