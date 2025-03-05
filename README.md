@@ -15,7 +15,8 @@
 * 리포지토리를 클론한 폴더의 상위 디렉토리에 다음과 같은 형태의 APIKey.json 파일을 작성합니다.
 ```json
   {
-    "key": "APIKEYDEMO"
+    "key": "APIKEYDEMO",
+    "address": "mongodb+srv://..."
   }
 ```
 * result 폴더 안에 metadata 폴더를 만들어야 합니다.
